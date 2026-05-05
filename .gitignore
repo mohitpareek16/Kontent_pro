@@ -1,0 +1,6 @@
+.DS_Store
+node_modules
+.vercel
+*.html.bak
+"editor-tracker (2).html"
+"admin-panel-v2.html"
