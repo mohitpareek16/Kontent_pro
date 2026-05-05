@@ -179,7 +179,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, off, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCgHZJiT5drCpJ37fv8ARuP-F8nIfty7mk",
@@ -205,7 +205,8 @@
   window._fbOff = off;
   window._fbAuth = auth;
   window._fbProvider = provider;
-  window._fbSignInWithPopup = signInWithPopup;
+  window._fbSignInWithRedirect = signInWithRedirect;
+  window._fbGetRedirectResult = getRedirectResult;
   window._fbOnAuthStateChanged = onAuthStateChanged;
   window._fbSignOut = signOut;
   window._fbReady = true;
@@ -344,7 +345,15 @@ function initAppAuth() {
     return;
   }
   
-  document.getElementById('root').innerHTML = '<div class="setup-screen"><div class="setup-title">Loading...</div></div>';
+  document.getElementById('root').innerHTML = '<div class="setup-screen"><div class="setup-title">Checking Authentication...</div></div>';
+
+  // Check for redirect result (errors during login)
+  window._fbGetRedirectResult(window._fbAuth).catch(err => {
+    console.error("Redirect Login Error:", err);
+    if (err.code !== 'auth/redirect-cancelled-by-user') {
+      alert("Login failed: " + err.message);
+    }
+  });
 
   if (authUnsubscribe) authUnsubscribe();
   authUnsubscribe = window._fbOnAuthStateChanged(window._fbAuth, async (user) => {
@@ -401,7 +410,8 @@ function renderSetup() {
 
 function doGoogleLogin() {
   if (!window._fbReady) return;
-  window._fbSignInWithPopup(window._fbAuth, window._fbProvider).catch(err => {
+  // Use Redirect instead of Popup for better reliability
+  window._fbSignInWithRedirect(window._fbAuth, window._fbProvider).catch(err => {
     console.error("Google Sign In Error:", err);
     alert("Sign in failed. Please try again.");
   });
